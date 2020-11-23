@@ -1,0 +1,13 @@
+[Unit]
+Description=Calendar2YouTube event service
+
+[Service]
+Type=oneshot
+Restart=always
+RestartSec=600
+
+WorkingDirectory=/opt/calendar2youtube
+ExecStart=/opt/calendar2youtube/venv/bin/python /opt/calendar2youtube/main.py
+
+[Install]
+WantedBy=multi-user.target
