@@ -2,7 +2,6 @@
 Description=Calendar2YouTube event service
 
 [Service]
-Type=oneshot
 Restart=always
 RestartSec=600
 
