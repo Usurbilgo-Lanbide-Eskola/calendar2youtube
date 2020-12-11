@@ -21,12 +21,13 @@ class YouTubeHandler(object):
         self.stream_id = self.get_stream_id_by_title(self.stream_title)
 
     def get_next_youtube_event(self):
-        live_broadcasts_result = self.service.liveBroadcasts().list(
+        all_live_broadcasts_result = self.service.liveBroadcasts().list(
                                                 part="snippet,contentDetails,status",
                                                 broadcastType="all", mine=True
                                             ).execute()
 
-        live_broadcasts = live_broadcasts_result.get('items', [])
+        all_live_broadcasts = all_live_broadcasts_result.get('items', [])
+        live_broadcasts = [broadcast for broadcast in all_live_broadcasts if not self.is_event_completed(broadcast)]
 
         if not live_broadcasts:
             logger.debug("No YouTube events scheduled")
@@ -39,7 +40,7 @@ class YouTubeHandler(object):
             # We only allow a single scheduled event
             logger.debug("More than one YouTube event scheduled, delete all of them")
             for live_broadcast in live_broadcasts:
-                self.delete_youtube_event(live_broadcast.get("id"))
+                self.delete_youtube_event(live_broadcast)
             return
 
     def compare_and_set_event(self, calendar_event, youtube_event):
@@ -50,9 +51,8 @@ class YouTubeHandler(object):
 
         # YouTube event created, but deleted in Google Calendar
         if youtube_event and not calendar_event:
-            logger.info("Non existing YouTube event created, delete it")
-            y_id = youtube_event.get("id")
-            self.delete_youtube_event(y_id)
+            logger.info("Non existing YouTube event created, perhaps we should delete it")
+            self.delete_youtube_event(youtube_event)
             return
         
         # Google Calendar present, but not created in YouTube
@@ -66,17 +66,16 @@ class YouTubeHandler(object):
         g_start = calendar_event.get("start", {}).get("dateTime")
         g_end = calendar_event.get("end", {}).get("dateTime")
 
-        y_id = youtube_event.get("id")
         y_title = youtube_event.get("snippet", {}).get("title", "")
-        y_start = youtube_event.get("snippet", {}).get("scheduledStartTime", None)
-        y_end = youtube_event.get("snippet", {}).get("scheduledEndTime", None)
+        y_start = youtube_event.get("snippet", {}).get("scheduledStartTime")
+        y_end = youtube_event.get("snippet", {}).get("scheduledEndTime")
 
         if g_title != y_title or \
             iso8601.parse_date(g_start) != iso8601.parse_date(y_start) or \
                 iso8601.parse_date(g_end) != iso8601.parse_date(y_end):
             logger.warn("Both events are not synchronized, recreate it")
-            self.delete_youtube_event(y_id)
-            self.create_youtube_event(calendar_event)
+            if self.delete_youtube_event(youtube_event):
+                self.create_youtube_event(calendar_event)
         else:
             logger.debug("Everything is synchronized")
 
@@ -88,7 +87,18 @@ class YouTubeHandler(object):
         broadcast_id = self.create_broadcast(title, start, end)
         self.bind_broadcast(broadcast_id, self.stream_id)
 
-    def delete_youtube_event(self, broadcast_id):
+    def delete_youtube_event(self, youtube_event):
+        event_title = youtube_event.get("snippet", {}).get("title", "")
+        event_id = youtube_event.get("id")
+
+        if self.is_event_removable(youtube_event):
+            logger.debug(f"The YouTube event '{event_title}' must be deleted")
+            self.delete_youtube_event_by_id(event_id)
+            return True
+        else:
+            logger.debug(f"The YouTube event '{event_title}' should not be deleted")
+
+    def delete_youtube_event_by_id(self, broadcast_id):
         delete_broadcast_response = self.service.liveBroadcasts().delete(
                                                     id=broadcast_id
                                                 ).execute()
@@ -129,7 +139,8 @@ class YouTubeHandler(object):
                                             
                                         },
                                         "contentDetails": {
-                                            "enableAutoStart": True
+                                            "enableAutoStart": True,
+                                            "enableAutoStop": True
                                         }
                                     }
                                 ).execute()
@@ -158,3 +169,20 @@ class YouTubeHandler(object):
             return None
         
         return bind_id
+
+    def is_event_removable(self, youtube_event):
+        event_status = youtube_event.get("status", {}).get("lifeCycleStatus")
+        event_title = youtube_event.get("snippet", {}).get("title", "")
+
+        if event_status in ["ready"]:
+            return True          
+        elif event_status in ["complete", "live"]:
+            return False
+        else:
+            logger.warn(f"The YouTube event '{event_title}' has an unknown state: '{event_status}'")
+            return False
+
+    def is_event_completed(self, youtube_event):
+        event_status = youtube_event.get("status", {}).get("lifeCycleStatus")
+
+        return True if event_status == "complete" else False
