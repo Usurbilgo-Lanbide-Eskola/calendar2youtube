@@ -73,10 +73,11 @@ class GoogleCalendarHandler(object):
         return events
 
     def get_classroom_streaming_events(self, previous_days=0, future_days=30, max_results=100):
-        events = self.get_classroom_events(previous_days, future_days, max_results)
+        events = self.get_classroom_events(previous_days, future_days)
         streaming_events = [event for event in events if event.get("description") and self.keyword in event.get("description")]
-        logger.debug("Number of streaming events: {}".format(len(streaming_events)))
-        return streaming_events
+        streaming_events_accepted = streaming_events[:max_results]
+        logger.debug("Number of streaming events accepted: {} ({})".format(len(streaming_events_accepted), len(streaming_events)))
+        return streaming_events_accepted
 
     def get_classroom_next_streaming_event(self):
         events = self.get_classroom_streaming_events(0, 7, 1)
