@@ -83,8 +83,9 @@ class YouTubeHandler(object):
         title = calendar_event.title
         start = calendar_event.start_date
         end = calendar_event.end_date
+        privacy_status = "unlisted" if calendar_event.is_private() else "public"
 
-        broadcast_id = self.create_broadcast(title, start, end)
+        broadcast_id = self.create_broadcast(title, start, end, privacy_status)
         self.bind_broadcast(broadcast_id, self.stream_id)
 
     def delete_youtube_event(self, youtube_event):
