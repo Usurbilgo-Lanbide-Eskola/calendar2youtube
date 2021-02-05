@@ -54,7 +54,7 @@ The calendar events can be filtered using a keyword.
 
 ## Author
 
-(c) 2020 [Usurbilgo Lanbide Eskola](http://www.lhusurbil.eus/web/) ([Aitor Iturrioz](https://github.com/bodiroga))
+(c) 2021 [Usurbilgo Lanbide Eskola](http://www.lhusurbil.eus/web/) ([Aitor Iturrioz](https://github.com/bodiroga))
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
