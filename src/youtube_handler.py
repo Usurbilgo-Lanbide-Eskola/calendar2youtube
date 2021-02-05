@@ -62,9 +62,9 @@ class YouTubeHandler(object):
             return
 
         # Both present, check if they are the same
-        g_title = calendar_event.get("summary", "")
-        g_start = calendar_event.get("start", {}).get("dateTime")
-        g_end = calendar_event.get("end", {}).get("dateTime")
+        g_title = calendar_event.title
+        g_start = calendar_event.start_date
+        g_end = calendar_event.end_date
 
         y_title = youtube_event.get("snippet", {}).get("title", "")
         y_start = youtube_event.get("snippet", {}).get("scheduledStartTime")
@@ -80,9 +80,9 @@ class YouTubeHandler(object):
             logger.debug("Everything is synchronized")
 
     def create_youtube_event(self, calendar_event):
-        title = calendar_event.get("summary")
-        start = calendar_event.get("start").get("dateTime")
-        end = calendar_event.get("end").get("dateTime")
+        title = calendar_event.title
+        start = calendar_event.start_date
+        end = calendar_event.end_date
 
         broadcast_id = self.create_broadcast(title, start, end)
         self.bind_broadcast(broadcast_id, self.stream_id)
@@ -92,7 +92,7 @@ class YouTubeHandler(object):
         event_id = youtube_event.get("id")
 
         if self.is_event_removable(youtube_event):
-            logger.debug(f"The YouTube event '{event_title}' must be deleted")
+            logger.info(f"The YouTube event '{event_title}' must be deleted")
             self.delete_youtube_event_by_id(event_id)
             return True
         else:
