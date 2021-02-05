@@ -124,7 +124,7 @@ class YouTubeHandler(object):
                 logger.debug("Id: '{}' for stream '{}'".format(stream_id, title))
                 return stream_id
 
-    def create_broadcast(self, title, start_time, end_time):
+    def create_broadcast(self, title, start_time, end_time, privacy_status="public"):
         create_broadcast_response = self.service.liveBroadcasts().insert(
                                     part="snippet,status,contentDetails",
                                     body={
@@ -135,7 +135,7 @@ class YouTubeHandler(object):
                                         },
                                         "status": {
                                             "selfDeclaredMadeForKids": False,
-                                            "privacyStatus": "public"
+                                            "privacyStatus": privacy_status
                                             
                                         },
                                         "contentDetails": {
