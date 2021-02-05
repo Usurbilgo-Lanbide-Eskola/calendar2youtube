@@ -50,6 +50,7 @@ def main():
     CALENDAR2YOUTUBE_CALENDAR_ID = os.getenv("CALENDAR2YOUTUBE_CALENDAR_ID", "")
     LIVE_STREAM_TITLE = os.getenv("LIVE_STREAM_TITLE", "")
     STREAMING_KEYWORDS = json.loads(os.getenv("STREAMING_KEYWORDS", '["[streaming]"]'))
+    PRIVATE_KEYWORDS = json.loads(os.getenv("PRIVATE_KEYWORDS", '["[private]"]'))
 
     if not CLASSROOM_CALENDAR_ID or not CALENDAR2YOUTUBE_CALENDAR_ID or not LIVE_STREAM_TITLE:
         logger.error("There is a missing configuration parameter")
@@ -58,7 +59,7 @@ def main():
     credentials = load_credentials()
     
     # Create handlers
-    g_cal_handler = GoogleCalendarHandler(credentials, CLASSROOM_CALENDAR_ID, CALENDAR2YOUTUBE_CALENDAR_ID, STREAMING_KEYWORDS)
+    g_cal_handler = GoogleCalendarHandler(credentials, CLASSROOM_CALENDAR_ID, CALENDAR2YOUTUBE_CALENDAR_ID, STREAMING_KEYWORDS, PRIVATE_KEYWORDS)
     youtube_handler = YouTubeHandler(credentials)
     youtube_handler.set_stream_title(LIVE_STREAM_TITLE)
 

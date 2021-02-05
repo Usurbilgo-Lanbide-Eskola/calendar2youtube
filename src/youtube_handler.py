@@ -83,8 +83,9 @@ class YouTubeHandler(object):
         title = calendar_event.title
         start = calendar_event.start_date
         end = calendar_event.end_date
+        privacy_status = "unlisted" if calendar_event.is_private() else "public"
 
-        broadcast_id = self.create_broadcast(title, start, end)
+        broadcast_id = self.create_broadcast(title, start, end, privacy_status)
         self.bind_broadcast(broadcast_id, self.stream_id)
 
     def delete_youtube_event(self, youtube_event):
@@ -124,7 +125,7 @@ class YouTubeHandler(object):
                 logger.debug("Id: '{}' for stream '{}'".format(stream_id, title))
                 return stream_id
 
-    def create_broadcast(self, title, start_time, end_time):
+    def create_broadcast(self, title, start_time, end_time, privacy_status="public"):
         create_broadcast_response = self.service.liveBroadcasts().insert(
                                     part="snippet,status,contentDetails",
                                     body={
@@ -135,7 +136,7 @@ class YouTubeHandler(object):
                                         },
                                         "status": {
                                             "selfDeclaredMadeForKids": False,
-                                            "privacyStatus": "public"
+                                            "privacyStatus": privacy_status
                                             
                                         },
                                         "contentDetails": {
