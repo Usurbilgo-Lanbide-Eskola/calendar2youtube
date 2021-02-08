@@ -65,14 +65,17 @@ class YouTubeHandler(object):
         g_title = calendar_event.title
         g_start = calendar_event.start_date
         g_end = calendar_event.end_date
+        g_private = calendar_event.is_private()
 
         y_title = youtube_event.get("snippet", {}).get("title", "")
         y_start = youtube_event.get("snippet", {}).get("scheduledStartTime")
         y_end = youtube_event.get("snippet", {}).get("scheduledEndTime")
+        y_private = youtube_event.get("status", {}).get("privacyStatus") != "public"
 
         if g_title != y_title or \
             iso8601.parse_date(g_start) != iso8601.parse_date(y_start) or \
-                iso8601.parse_date(g_end) != iso8601.parse_date(y_end):
+                iso8601.parse_date(g_end) != iso8601.parse_date(y_end) or \
+                    g_private != y_private:
             logger.warn("Both events are not synchronized, recreate it")
             if self.delete_youtube_event(youtube_event):
                 self.create_youtube_event(calendar_event)
